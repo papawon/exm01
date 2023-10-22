@@ -1,0 +1,178 @@
+
+
+$ sudo dpkg -l | grep mariadb 
+
+ii  mariadb-client-10.3                        1:10.3.32-0ubuntu0.20.04.1            amd64        MariaDB database client binaries
+ii  mariadb-client-core-10.3                   1:10.3.32-0ubuntu0.20.04.1            amd64        MariaDB database core client binaries
+ii  mariadb-common                             1:10.3.32-0ubuntu0.20.04.1            all          MariaDB common metapackage
+ii  mariadb-server                             1:10.3.32-0ubuntu0.20.04.1            all          MariaDB database server (metapackage depending on the latest version)
+ii  mariadb-server-10.3                        1:10.3.32-0ubuntu0.20.04.1            amd64        MariaDB database server binaries
+ii  mariadb-server-core-10.3                   1:10.3.32-0ubuntu0.20.04.1            amd64        MariaDB database core server files
+ 
+
+다음 명령어로 mariadb 서버 및 관련 패키지를 삭제합니다.
+
+ $ sudo apt-get purge mariadb-server
+ $ sudo apt-get purge mariadb-server-10.3
+ $ sudo apt-get purge mariadb-client-10.3
+ $ sudo apt-get purge mariadb-server-core-10.3
+ $ sudo apt-get purge mariadb-client-core-10.3
+ $ sudo apt-get purge mariadb-common
+
+
+# MariaDB 서버 설치
+sudo apt install mariadb-server
+sudo apt-get install -y mariadb-server
+
+# MariaDB 클라이언트 설치
+sudo apt install mariadb-client
+
+## 만약 묻지 않는다면, ##
+# MariaDB secure 설정
+sudo mysql_secure_installation
+
+root 접속을 위한 비밀번호를 입력하세요.
+Enter current password for root (enter for none):
+
+root 비밀번호를 변경하시겠습니까?
+Change the root password? [Y/n]
+
+anonymous 계정을 지우시겠습니까?
+Remove anonymous users? [Y/n]
+
+test db를 지우시겠습니까?
+Remove test database and access to it? [Y/n]
+
+바로 적용하시겠습니까?
+Reload privilege tables now?
+
+# MariaDB 활성화
+systemctl enable mariadb
+
+# MariaDB 시작
+systemctl start mariadb
+
+# MariaDB 상태 확인
+systemctl status mariadb
+
+# MariaDB 중지
+sudo systemctl stop mysql
+
+# MariaDB 재시작
+sudo systemctl restart mysql
+
+#systemctl를 못 쓰는 상황이라면 service 명령어로 해주시면 됩니다
+sudo service mariadb start
+
+
+Velog의 adguy님의 글을 우연히 보게 되었는데요. 버전 관련한 부분이 없어서, 참고가 어려운 부분이 있다고 알려주셔서 이 내용을 추가합니다. 피드백 감사합니다!!
+
+Ubuntu 20.04
+Google Compute Engine
+mariaDB 10.3.22
+설치
+APT를 이용하여 설치
+
+
+sudo apt update
+사진에는 upgrade도 진행하지만, update만 진행해주시기 바랍니다.
+
+첫번째로 레지파토리에서 업데이트 패키지가 있는지 체크해봅니다.
+
+그 뒤, mariaDB를 설치하겠습니다. 설치는 매우 간단합니다.
+
+
+sudo apt-get install -y mariadb-server
+그러면 자동으로 필요한 패키지도 찾아서 설치하게 됩니다.
+
+설치 검증
+접속해보자!
+설치가 완료되면, 자동으로 실행되어 접속할 수가 있는데요. 접속은 mysql -u (유저 이름) -p로 하게 됩니다.
+
+
+
+mysql -u root -p
+mariaDB 10 버전대를 설치하였다면 접속이 되지 않습니다.
+
+이게 10.0 버전부터 적용된 Unix Socket 방식으로 인해 그렇습니다. 자세한 내용은 여기에서 보시면 이해가 되실 것 같습니다.
+
+접속이 안 되는 경우에는!?
+위 글을 요약하면 시스템 계정 = mysql ID를 대응시켜서 사용하는 것이 추세라고 합니다. 그래서 sudo를 통해 root 권한이 있음을 증명하여 mysql에 접속한다면 비밀번호를 입력할 필요가 없습니다. 그러므로 아래 명령어를 통해 접속합니다.
+
+
+
+sudo mysql
+비밀번호 입력 과정 없이 접속이 가능한 것을 확인할 수 있습니다.
+
+기본 설정
+Timezone 설정
+클라우드 서버로 이 환경을 구축하고 계신다면, 기본 시간대가 UTC로 되어있기 때문에 우리나라에서 사용하고 계시는 경우, 이 부분을 체크해보시는 것이 좋을 것 같습니다.
+
+
+
+SELECT @@global.time_zone, @@session.time_zone;
+mariaDB는 기본적으로 시스템 시간을 따라가고 있기 때문에 시스템 시간을 바꿔줄 필요가 있습니다. 일단, exit; 명령으로 mariaDB에서 나갑니다.
+
+그 다음, 아래 명령어를 실행하여 서울 시간대로 변경해줍니다.
+
+
+sudo timedatectl set-timezone 'Asia/Seoul'
+date
+timedatectl을 통해 서울로 시간대를 설정합니다. 이후, date를 통해 설정이 되었는지를 확인하면 됩니다.
+
+그 다음 아래 명령어를 통해 mariaDB를 다시 실행해줍니다.
+
+sudo systemctl restart mysqld
+
+그 후 접속하면 시간대가 제대로 설정되어 있음을 확인할 수 있습니다. 사용한 쿼리는 아래와 같습니다.
+
+SELECT now();
+Password 인증으로 변경하고자 하는 경우
+이 글에서 설치한 mariaDB 버전은 Peer 인증이 기본적으로 적용되어 있는 상태입니다. 하지만, 모종의 사유로 기존 Password 인증으로 변경하고 싶으신 경우가 있을텐데요.
+
+루트 비밀번호를 변경하고 기존 방식대로 접속하기 위해서는 아래의 SQL 문을 실행하면 됩니다.
+
+
+
+update user set plugin='' where User='root';
+set password = password('YOUR PASSWORD');
+flush privileges;
+위 사진의 경우에는 비밀번호를 'test1234'로 변경한 것이 됩니다. 비밀번호를 변경한 후 일반적으로 많이 아시는 방법으로 접속해보겠습니다.
+
+
+
+mysql -u root -p
+위와 같이 이전 방식으로도 접속이 됨을 확인하였습니다.
+
+외부 IP에서의 접속을 허용하고 싶은 경우
+OS, 클라우드 방화벽까지 확인을 했는데, 접속이 되지 않는 경우 아래와 같이 수정하면 해결될 수도 있습니다.
+
+sudo vim /etc/mysql/mariadb.conf.d/50-server.cnf
+위 파일을 여신 뒤...
+
+
+bind-address 부분을 0.0.0.0으로 변경하세요.
+
+이후, 아래 명령어로 mariaDB를 다시 시작합니다.
+
+sudo systemctl restart mysqld
+기본 Port를 변경하고 싶은 경우
+중복 포트 문제나 보안 정책으로 인해 기본 포트인 3306 포트를 이용하실 수 없는 경우 아래와 같이 시행합니다.
+
+sudo vim /etc/mysql/mariadb.conf.d/50-server.cnf
+
+
+위 파일을 에디터로 여신 뒤, port 부분을 변경하면 됩니다. 
+만일, 위 사진처럼 주석 처리가 되어 있는 경우에는 주석 처리를 해제하고 수행합니다.
+
+이후, 아래 명령어로 mariaDB를 다시 시작합니다.
+
+sudo systemctl restart mysqld
+Server returns invalid timezone. Need to set 'serverTimezone' property. 에러
+SQL에 접속하신 후 아래 명령어를 순차적으로 입력하고 재시도합니다.
+
+SET GLOBAL time_zone='+09:00';
+SET time_zone='+09:00';
+profile
+코코블루
+

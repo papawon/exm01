@@ -1,0 +1,88 @@
+﻿# vi /etc/bind/zones.rfc1918 (마지막 줄에 추가)
+​
+zone "localdcv.com" IN { type master; file "/etc/bind/localdcv.zone";allow-update { none; }; };
+zone "15.20.172.in-addr.arpa" IN { type master; file "/etc/bind/172.20.15.rzone";allow-update { none; }; };
+zone "1.168.192.in-addr.arpa" IN { type master; file "/etc/bind/192.168.1.rzone";allow-update { none; }; };
+zone "2.168.192.in-addr.arpa" IN { type master; file "/etc/bind/192.168.2.rzone";allow-update { none; }; };
+zone "3.168.192.in-addr.arpa" IN { type master; file "/etc/bind/192.168.3.rzone";allow-update { none; }; };
+
+# vi /etc/bind/named.conf.local (주석 제거)
+
+include "/etc/bind/zones.rfc1918";
+
+# vi /etc/bind/localdcv.zone
+
+$TTL 86400
+@       IN SOA dnsntp.localdcv.com.   root (
+                                        1		; serial
+                                        604800	; refresh
+                                        86400	; retry
+                                        2419200	; expire
+                                        604800 )	 ; minimum
+;
+        IN NS   dnsntp.localdcv.com.
+dnsntp		IN	A	172.20.15.111
+router01		IN	A	172.20.15.254
+l4		IN	A	192.168.1.10
+www		IN	CNAME	l4
+web01		IN	A	192.168.1.11
+web02		IN	A	192.168.1.12
+was01		IN	A	192.168.2.11
+db01		IN	A	192.168.2.20
+nfs01		IN	A	192.168.3.10
+
+# vi /etc/bind/172.20.15.rzone
+
+$TTL 86400
+@       IN SOA dnsntp.localdcv.com.   root (
+                                        1		; serial
+                                        604800	; refresh
+                                        86400	; retry
+                                        2419200	; expire
+                                        604800 )	 ; minimum
+;
+        	IN NS   dnsntp.localdcv.com.
+111	IN PTR dnsntp.localdcv.com.
+254	IN PTR router01.localdcv.com.
+
+# vi /etc/bind/192.168.1.rzone
+
+$TTL 86400
+@       IN SOA dnsntp.localdcv.com.   root (
+                                        1		; serial
+                                        604800	; refresh
+                                        86400	; retry
+                                        2419200	; expire
+                                        604800 )	 ; minimum
+;
+        	IN NS   dnsntp.localdcv.com.
+10	IN PTR l4.localdcv.com.
+11	IN PTR web01.localdcv.com.
+12	IN PTR web02.localdcv.com.
+
+# vi /etc/bind/192.168.2.rzone
+
+$TTL 86400
+@       IN SOA dnsntp.localdcv.com.   root (
+                                        1		; serial
+                                        604800	; refresh
+                                        86400	; retry
+                                        2419200	; expire
+                                        604800 )	 ; minimum
+;
+        	IN NS   dnsntp.localdcv.com.
+11	IN PTR was01.localdcv.com.
+20	IN PTR db02.localdcv.com.
+
+# vi /etc/bind/192.168.3.rzone
+
+$TTL 86400
+@       IN SOA dnsntp.localdcv.com.   root (
+                                        1		; serial
+                                        604800	; refresh
+                                        86400	; retry
+                                        2419200	; expire
+                                        604800 )	 ; minimum
+;
+        	IN NS   dnsntp.localdcv.com.
+10	IN PTR nfs01.localdcv.com.
